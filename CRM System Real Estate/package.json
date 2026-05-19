@@ -1,0 +1,21 @@
+{
+  "name": "real-estate-crm",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "db:migrate": "pnpm --filter api db:migrate",
+    "db:generate": "pnpm --filter api db:generate"
+  },
+  "devDependencies": {
+    "@prisma/config": "^7.8.0",
+    "dotenv": "^17.4.2",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "prisma": "^5.10.2"
+  }
+}

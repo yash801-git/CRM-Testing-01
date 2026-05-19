@@ -1,0 +1,325 @@
+// Real Estate CRM - Single Tenant Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BROKER // Admin
+  AGENT  // Staff
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  FOLLOW_UP
+  SITE_VISIT_SCHEDULED
+  NEGOTIATION
+  CONVERTED
+  LOST
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  UNDER_OFFER
+  SOLD
+  RENTED
+  INACTIVE
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  HOUSE
+  COMMERCIAL
+  PLOT
+}
+
+enum DealStage {
+  INQUIRY
+  QUALIFICATION
+  PROPOSAL
+  NEGOTIATION
+  BOOKING
+  REGISTRATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum FollowUpType {
+  CALL
+  MEETING
+  EMAIL
+  WHATSAPP
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+enum CampaignType {
+  EMAIL
+  WHATSAPP
+  SMS
+  SOCIAL_MEDIA
+  COLD_CALL
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  PAUSED
+}
+
+enum IntegrationProvider {
+  META_LEADS
+  WHATSAPP_CLOUD
+  GOOGLE_CALENDAR
+}
+
+model Integration {
+  id            String              @id @default(uuid())
+  provider      IntegrationProvider
+  isActive      Boolean             @default(true)
+  config        Json                // Stores API keys, tokens, page IDs, etc.
+  webhookSecret String?            // Used to verify incoming webhooks
+  userId        String?             // If integration is user-specific
+  user          User?               @relation(fields: [userId], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([provider, userId])
+}
+
+model Campaign {
+  id            String         @id @default(uuid())
+  title         String
+  type          CampaignType   @default(EMAIL)
+  status        CampaignStatus @default(DRAFT)
+  content       String?        // Message template / campaign description
+  targetAudience String?       // e.g., "Interested Leads with Budget > 50L"
+  budget        Decimal?       @db.Decimal(15, 2)
+  spent         Decimal?       @db.Decimal(15, 2) @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  propertyId    String?
+  property      Property?      @relation(fields: [propertyId], references: [id])
+  createdById   String?
+  createdBy     User?          @relation("CampaignCreator", fields: [createdById], references: [id])
+  leads         CampaignLead[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model CampaignLead {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  sentAt      DateTime?
+  responded   Boolean  @default(false)
+
+  @@unique([campaignId, leadId])
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          UserRole  @default(AGENT)
+  phone         String?
+  avatarUrl     String?
+  address       String?
+  city          String?
+  state         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  leads         Lead[]    @relation("LeadOwner")
+  properties    Property[] @relation("PropertyOwner")
+  deals         Deal[]     @relation("DealOwner")
+  tasksAssigned Task[]     @relation("TaskAssignee")
+  tasksCreated  Task[]     @relation("TaskCreator")
+  siteVisits    SiteVisit[] @relation("VisitAgent")
+  followUps     FollowUp[] @relation("AgentFollowUps")
+  notifications Notification[] @relation("UserNotifications")
+  campaigns     Campaign[] @relation("CampaignCreator")
+  activityLogs  ActivityLog[]
+  integrations  Integration[]
+}
+
+model Lead {
+  id            String      @id @default(uuid())
+  name          String
+  email         String?
+  phone         String
+  source        String?     // e.g., Website, Referral, Zillow
+  status        LeadStatus  @default(NEW)
+  budget        Decimal?    @db.Decimal(15, 2)
+  notes         String?
+  ownerId       String?
+  owner         User?       @relation("LeadOwner", fields: [ownerId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  deals         Deal[]
+  siteVisits    SiteVisit[]
+  followUps     FollowUp[]
+  campaignLeads CampaignLead[]
+}
+
+model Property {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  price         Decimal        @db.Decimal(15, 2)
+  type          PropertyType
+  status        PropertyStatus @default(AVAILABLE)
+  address       String
+  unitNumber    String?
+  city          String
+  state         String
+  zipCode       String?
+  bedrooms      Int?
+  bathrooms     Int?
+  areaSqFt      Int?
+  amenities     String[]       // e.g., ["Pool", "Gym", "Parking"]
+  images        String[]       // Array of image URLs
+  ownerId       String?
+  owner         User?          @relation("PropertyOwner", fields: [ownerId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  deals         Deal[]
+  siteVisits    SiteVisit[]
+  campaigns     Campaign[]
+}
+
+model Deal {
+  id            String    @id @default(uuid())
+  title         String
+  value         Decimal   @db.Decimal(15, 2)
+  stage         DealStage @default(INQUIRY)
+  leadId        String?
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id])
+  ownerId       String?
+  owner         User?     @relation("DealOwner", fields: [ownerId], references: [id])
+  expectedClose DateTime?
+  closedAt      DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  followUps     FollowUp[]
+}
+
+model SiteVisit {
+  id            String    @id @default(uuid())
+  leadId        String?
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id])
+  agentId       String?
+  agent         User?     @relation("VisitAgent", fields: [agentId], references: [id])
+  scheduledAt   DateTime
+  status        String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+  feedback      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Task {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  priority      TaskPriority @default(MEDIUM)
+  status        TaskStatus   @default(PENDING)
+  dueDate       DateTime?
+  assigneeId    String?
+  assignee      User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId     String?
+  creator       User?        @relation("TaskCreator", fields: [creatorId], references: [id])
+  relatedType   String?      // LEAD, PROPERTY, DEAL
+  relatedId     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   // INFO, WARNING, SUCCESS, ERROR
+  isRead    Boolean  @default(false)
+  userId    String
+  user      User     @relation("UserNotifications", fields: [userId], references: [id])
+  link      String?  // Optional link to redirect
+  createdAt DateTime @default(now())
+}
+
+model FollowUp {
+  id            String         @id @default(uuid())
+  title         String
+  type          FollowUpType   @default(CALL)
+  status        FollowUpStatus @default(PENDING)
+  scheduledAt   DateTime
+  notes         String?
+  
+  leadId        String?
+  lead          Lead?          @relation(fields: [leadId], references: [id])
+  
+  dealId        String?
+  deal          Deal?          @relation(fields: [dealId], references: [id])
+  
+  agentId       String
+  agent         User           @relation("AgentFollowUps", fields: [agentId], references: [id])
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // STATUS_CHANGED, RECORD_DELETED, ASSIGNED, CREATED
+  entityType  String   // Lead, Deal, Property, SiteVisit, Campaign, Task
+  entityId    String
+  entityTitle String?  // snapshot of name/title at time of action
+  oldValue    String?  // JSON string of previous state
+  newValue    String?  // JSON string of new state
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
