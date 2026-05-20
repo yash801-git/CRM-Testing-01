@@ -13,6 +13,7 @@ interface TaskFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData?: any;
+  leadId?: string;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ open, onOpenChange, initialData }) => {

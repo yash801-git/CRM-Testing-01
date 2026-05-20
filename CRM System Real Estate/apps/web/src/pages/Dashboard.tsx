@@ -25,6 +25,7 @@ import { useVisitStore } from '@/modules/site-visits/store';
 import { useFollowUpStore } from '@/modules/follow-ups/store';
 import { useCampaignStore } from '@/modules/marketing/store';
 import { useUserStore } from '@/store/userStore';
+import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -152,6 +153,7 @@ const Dashboard: React.FC = () => {
 
   const upcomingFollowUps = useMemo(() => {
     return [...myFollowUps].filter(f => f.status === 'PENDING').sort((a,b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()).slice(0, 3);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myFollowUps]);
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
@@ -392,7 +394,7 @@ const Dashboard: React.FC = () => {
               { name: 'Leads', value: myLeads.length, icon: Users, path: '/leads' },
               { name: 'Visits', value: myVisits.length, icon: MapPin, path: '/visits' },
               { name: 'Deals', value: myDeals.length, icon: Briefcase, path: '/pipeline' },
-            ]).map((item, i) => (
+            ]).map((item: any, i: number) => (
               <div 
                 key={i} 
                 className="flex items-center gap-4 cursor-pointer group"
