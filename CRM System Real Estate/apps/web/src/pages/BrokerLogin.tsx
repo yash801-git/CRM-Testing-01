@@ -106,13 +106,7 @@ const BrokerLogin: React.FC = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center pb-10">
-          <p className="text-xs font-bold text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-black hover:underline underline-offset-4">
-              Sign Up
-            </Link>
-          </p>
-          <Link to="/auth" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mt-8 hover:text-primary transition-colors">
+          <Link to="/auth" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 hover:text-primary transition-colors">
             ← Back to Role Selection
           </Link>
         </CardFooter>

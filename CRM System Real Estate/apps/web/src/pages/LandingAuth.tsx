@@ -31,7 +31,7 @@ const LandingAuth: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             {/* Broker */}
             <button
-              onClick={() => navigate('/login/broker')}
+              onClick={() => navigate('/broker')}
               className="group flex flex-col items-center gap-4 p-6 bg-white/5 hover:bg-blue-600/20 border border-white/10 hover:border-blue-500/50 rounded-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-blue-500/10 text-left"
             >
               <div className="h-14 w-14 rounded-2xl bg-blue-600/20 text-blue-400 group-hover:bg-blue-600/40 flex items-center justify-center transition-colors duration-300 shadow-inner">
@@ -46,7 +46,7 @@ const LandingAuth: React.FC = () => {
 
             {/* Agent */}
             <button
-              onClick={() => navigate('/login/agent')}
+              onClick={() => navigate('/agent')}
               className="group flex flex-col items-center gap-4 p-6 bg-white/5 hover:bg-indigo-600/20 border border-white/10 hover:border-indigo-500/50 rounded-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-xl hover:shadow-indigo-500/10 text-left"
             >
               <div className="h-14 w-14 rounded-2xl bg-indigo-600/20 text-indigo-400 group-hover:bg-indigo-600/40 flex items-center justify-center transition-colors duration-300 shadow-inner">
@@ -58,15 +58,6 @@ const LandingAuth: React.FC = () => {
               </div>
               <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors opacity-0 group-hover:opacity-100 self-end" />
             </button>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-white/10 text-center">
-            <p className="text-slate-400 text-sm">
-              New to EstateSync?{" "}
-              <button onClick={() => navigate('/register')} className="text-blue-400 font-bold hover:text-blue-300 transition-colors">
-                Register as Broker
-              </button>
-            </p>
           </div>
         </div>
       </div>

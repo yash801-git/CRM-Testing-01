@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingAuth from './pages/LandingAuth';
 import BrokerLogin from './pages/BrokerLogin';
 import AgentLogin from './pages/AgentLogin';
-import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Properties from './modules/properties/PropertiesPage';
@@ -24,10 +23,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/auth" element={<LandingAuth />} />
-        <Route path="/login/broker" element={<BrokerLogin />} />
-        <Route path="/login/agent" element={<AgentLogin />} />
-        <Route path="/login" element={<Navigate to="/auth" />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/broker" element={<BrokerLogin />} />
+        <Route path="/agent" element={<AgentLogin />} />
+        <Route path="/login/broker" element={<Navigate to="/broker" replace />} />
+        <Route path="/login/agent" element={<Navigate to="/agent" replace />} />
+        <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
         <Route path="/" element={<Layout />}>

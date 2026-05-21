@@ -22,8 +22,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // Redirect to login page if unauthorized
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+      // Redirect to login page if unauthorized (avoid loops if already on auth pages)
+      const path = window.location.pathname;
+      if (path !== '/login' && path !== '/auth' && path !== '/broker' && path !== '/agent') {
         window.location.href = '/login';
       }
     }
