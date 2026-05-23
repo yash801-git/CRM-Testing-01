@@ -161,15 +161,304 @@ const Dashboard: React.FC = () => {
   const totalPortfolioValue = myProperties.reduce((acc, p) => acc + Number(p.price || 0), 0);
 
   const handleExport = () => {
-    toast.success("Preparing your business report...", {
-      description: "We are aggregating your latest CRM data. Your download will start shortly.",
+    toast.info("Generating your business report...", {
+      description: "Aggregating metrics, leads, and pipeline status.",
     });
-    // Simulate generation
-    setTimeout(() => {
-      toast.success("Report Ready!", {
-        description: "Your PDF report has been generated successfully.",
+
+    try {
+      // Create a hidden iframe for print generation
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) {
+        throw new Error("Could not access iframe document");
+      }
+
+      // Generate tables content
+      const leadsTableRows = myLeads.slice(0, 15).map(l => `
+        <tr>
+          <td><strong>${l.name || 'N/A'}</strong></td>
+          <td>${l.email || 'N/A'}</td>
+          <td>${l.phone || 'N/A'}</td>
+          <td><span class="badge badge-${(l.status || 'NEW').toLowerCase()}">${l.status}</span></td>
+          <td>${l.source || 'Direct'}</td>
+          <td>₹${l.budget ? Number(l.budget).toLocaleString('en-IN') : '0'}</td>
+          <td>${new Date(l.createdAt).toLocaleDateString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      const dealsTableRows = myDeals.slice(0, 15).map(d => `
+        <tr>
+          <td><strong>${d.title || 'N/A'}</strong></td>
+          <td>₹${d.value ? Number(d.value).toLocaleString('en-IN') : '0'}</td>
+          <td><span class="badge badge-deal">${(d.stage || 'INQUIRY').replace('_', ' ')}</span></td>
+          <td>${d.expectedClose ? new Date(d.expectedClose).toLocaleDateString('en-IN') : 'N/A'}</td>
+          <td>${new Date(d.createdAt).toLocaleDateString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      const propertiesTableRows = myProperties.slice(0, 15).map(p => `
+        <tr>
+          <td><strong>${p.title || 'N/A'}</strong></td>
+          <td>₹${p.price ? Number(p.price).toLocaleString('en-IN') : '0'}</td>
+          <td>${p.type}</td>
+          <td><span class="badge badge-prop-${(p.status || 'AVAILABLE').toLowerCase()}">${(p.status || 'AVAILABLE').replace('_', ' ')}</span></td>
+          <td>${p.city}, ${p.state}</td>
+          <td>${new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>EstateSync CRM Business Report</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+              body {
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                color: #0f172a;
+                margin: 0;
+                padding: 40px;
+                background-color: #ffffff;
+                font-size: 11px;
+                line-height: 1.5;
+              }
+              .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2px solid #e2e8f0;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+              }
+              .logo {
+                font-size: 24px;
+                font-weight: 800;
+                color: #0f172a;
+                letter-spacing: -0.04em;
+              }
+              .logo-accent {
+                color: #10b981;
+              }
+              .report-info {
+                text-align: right;
+              }
+              .report-info h1 {
+                margin: 0 0 5px 0;
+                font-size: 20px;
+                font-weight: 800;
+                letter-spacing: -0.03em;
+              }
+              .report-info p {
+                margin: 0;
+                color: #64748b;
+                font-weight: 600;
+              }
+              .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                margin-bottom: 30px;
+              }
+              .stat-card {
+                background-color: #f8fafc;
+                border: 1px solid #f1f5f9;
+                border-radius: 12px;
+                padding: 15px;
+              }
+              .stat-title {
+                text-transform: uppercase;
+                font-size: 10px;
+                font-weight: 800;
+                color: #64748b;
+                letter-spacing: 0.05em;
+                margin-bottom: 5px;
+              }
+              .stat-value {
+                font-size: 20px;
+                font-weight: 800;
+                color: #0f172a;
+              }
+              .section-title {
+                font-size: 14px;
+                font-weight: 800;
+                color: #0f172a;
+                margin-top: 30px;
+                margin-bottom: 12px;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 6px;
+                page-break-after: avoid;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 25px;
+              }
+              th, td {
+                text-align: left;
+                padding: 10px;
+                border-bottom: 1px solid #f1f5f9;
+              }
+              th {
+                background-color: #f8fafc;
+                color: #64748b;
+                font-weight: 800;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+              }
+              tr {
+                page-break-inside: avoid;
+              }
+              .badge {
+                display: inline-block;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 9px;
+                font-weight: 800;
+                text-transform: uppercase;
+              }
+              .badge-new { background-color: #dbeafe; color: #1e40af; }
+              .badge-contacted { background-color: #fef3c7; color: #92400e; }
+              .badge-converted { background-color: #d1fae5; color: #065f46; }
+              .badge-lost { background-color: #fee2e2; color: #991b1b; }
+              .badge-deal { background-color: #e0f2fe; color: #0369a1; }
+              .badge-prop-available { background-color: #d1fae5; color: #065f46; }
+              .badge-prop-sold { background-color: #fee2e2; color: #991b1b; }
+              
+              .footer {
+                margin-top: 50px;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 15px;
+                text-align: center;
+                color: #94a3b8;
+                font-size: 10px;
+              }
+              
+              @media print {
+                body {
+                  padding: 0;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="logo">Estate<span class="logo-accent">Sync</span></div>
+              <div class="report-info">
+                <h1>Performance Report</h1>
+                <p>Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              </div>
+            </div>
+            
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-title">Portfolio Value</div>
+                <div class="stat-value">₹${(totalPortfolioValue / 10000000).toFixed(2)} Cr</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-title">Pipeline Value</div>
+                <div class="stat-value">₹${(pipelineValue / 10000000).toFixed(2)} Cr</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-title">Total Active Leads</div>
+                <div class="stat-value">${myLeads.length}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-title">Marketing Reach</div>
+                <div class="stat-value">${myCampaigns.length} Campaigns</div>
+              </div>
+            </div>
+            
+            <div class="section-title">Active Deals Pipeline</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Deal Title</th>
+                  <th>Value</th>
+                  <th>Stage</th>
+                  <th>Expected Close</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${dealsTableRows || '<tr><td colspan="5" style="text-align:center;">No active deals in pipeline.</td></tr>'}
+              </tbody>
+            </table>
+            
+            <div class="section-title">Lead List Overview</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Lead Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Source</th>
+                  <th>Budget</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${leadsTableRows || '<tr><td colspan="7" style="text-align:center;">No active leads available.</td></tr>'}
+              </tbody>
+            </table>
+            
+            <div class="section-title">Property Portfolio Overview</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Property Title</th>
+                  <th>Price</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Location</th>
+                  <th>Created Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${propertiesTableRows || '<tr><td colspan="6" style="text-align:center;">No property listings available.</td></tr>'}
+              </tbody>
+            </table>
+            
+            <div class="footer">
+              <p>Confidential Business Report - EstateSync Real Estate CRM. Generated by ${user?.name || 'Broker Admin'}.</p>
+            </div>
+          </body>
+        </html>
+      `);
+
+      doc.close();
+
+      // Trigger the print dialog once iframe is rendered
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+
+        toast.success("Report Ready!", {
+          description: "Your PDF report has been generated successfully.",
+        });
+      }, 500);
+
+    } catch (err) {
+      console.error("Export failure:", err);
+      toast.error("Failed to generate report", {
+        description: "Ensure you are using a modern browser with printing support."
       });
-    }, 2000);
+    }
   };
 
   if (!user) return null;
