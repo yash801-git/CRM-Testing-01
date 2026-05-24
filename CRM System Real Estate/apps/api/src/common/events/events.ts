@@ -11,6 +11,7 @@ export class LeadCreatedEvent {
     public readonly leadId: string,
     public readonly ownerId: string,
     public readonly leadName: string,
+    public readonly formId?: string,
   ) {}
 }
 

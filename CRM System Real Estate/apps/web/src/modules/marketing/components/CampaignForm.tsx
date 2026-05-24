@@ -171,6 +171,12 @@ const CampaignForm: React.FC<CampaignFormProps> = ({ open, onOpenChange, initial
               <Input id="targetAudience" name="targetAudience" defaultValue={initialData?.targetAudience} placeholder="e.g. Budget > 50L Leads" className="h-12 rounded-2xl bg-secondary/50 border-none font-bold" />
             </div>
 
+            {/* Facebook Form ID */}
+            <div className="space-y-2">
+              <Label htmlFor="facebookFormId" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Facebook Form ID (Optional)</Label>
+              <Input id="facebookFormId" name="facebookFormId" defaultValue={initialData?.facebookFormId} placeholder="e.g. 1029384756 (for auto-routing)" className="h-12 rounded-2xl bg-secondary/50 border-none font-bold" />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Start Date</Label>

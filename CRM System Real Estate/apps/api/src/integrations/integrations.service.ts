@@ -1,6 +1,8 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IntegrationProvider } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CRM_EVENTS, LeadCreatedEvent } from '../common/events/events';
 
 @Injectable()
 export class IntegrationsService {
@@ -8,6 +10,7 @@ export class IntegrationsService {
 
   constructor(
     private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async getIntegrations(userId: string) {
@@ -71,10 +74,11 @@ export class IntegrationsService {
   private async processMetaLead(leadgenValue: any) {
     try {
       const leadId = leadgenValue.leadgen_id;
-      this.logger.log(`Processing Meta Lead ID: ${leadId}`);
+      const formId = leadgenValue.form_id;
+      this.logger.log(`Processing Meta Lead ID: ${leadId}, Form ID: ${formId}`);
 
       // Use Prisma directly to avoid userId foreign-key issues
-      await this.prisma.lead.create({
+      const lead = await this.prisma.lead.create({
         data: {
           name: `Meta Lead ${String(leadId).substring(0, 8)}`,
           phone: '0000000000',
@@ -85,6 +89,12 @@ export class IntegrationsService {
       });
 
       this.logger.log(`Successfully created CRM lead from Meta`);
+
+      // Emit event for auto-enrollment and auto-tasks
+      this.eventEmitter.emit(
+        CRM_EVENTS.LEAD_CREATED,
+        new LeadCreatedEvent(lead.id, lead.ownerId || '', lead.name, formId)
+      );
     } catch (error) {
       this.logger.error('Failed to process Meta lead', error);
     }

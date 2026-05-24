@@ -22,6 +22,13 @@ export class AutomationListener {
     try {
       this.logger.log(`Handling ${CRM_EVENTS.LEAD_CREATED} for lead ${event.leadId}`);
       
+      // Fallback creator/assignee if ownerId is empty (e.g. Meta Ads lead)
+      let ownerId: string | undefined = event.ownerId || undefined;
+      if (!ownerId) {
+        const broker = await this.prisma.user.findFirst({ where: { role: 'BROKER' } });
+        ownerId = broker?.id || undefined;
+      }
+
       // Auto-create Welcome Call task
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -32,23 +39,96 @@ export class AutomationListener {
         status: 'PENDING',
         priority: 'HIGH',
         dueDate: tomorrow.toISOString(),
-        assignee: event.ownerId ? { connect: { id: event.ownerId } } : undefined,
+        assignee: ownerId ? { connect: { id: ownerId } } : undefined,
         relatedType: event.leadId ? 'LEAD' : undefined,
         relatedId: event.leadId || undefined,
-        creator: { connect: { id: event.ownerId } },
+        creator: ownerId ? { connect: { id: ownerId } } : undefined,
       });
 
       // Send Notification
-      await this.notificationsService.create({
-        title: 'New Lead Auto-Task',
-        message: `A Welcome Call task has been scheduled for ${event.leadName}.`,
-        type: 'INFO',
-        userId: event.ownerId,
-        link: '/tasks'
-      });
+      if (ownerId) {
+        await this.notificationsService.create({
+          title: 'New Lead Auto-Task',
+          message: `A Welcome Call task has been scheduled for ${event.leadName}.`,
+          type: 'INFO',
+          userId: ownerId,
+          link: '/tasks'
+        });
+      }
       this.logger.log(`Successfully handled ${CRM_EVENTS.LEAD_CREATED}`);
     } catch (error) {
       this.logger.error(`Error in handleLeadCreated: ${error.message}`, error.stack);
+    }
+  }
+
+  @OnEvent(CRM_EVENTS.LEAD_CREATED)
+  async handleNewLeadMarketingEnrollment(event: LeadCreatedEvent) {
+    try {
+      this.logger.log(`Checking automated marketing campaign enrollment for lead: ${event.leadId}`);
+      
+      const lead = await this.prisma.lead.findUnique({
+        where: { id: event.leadId }
+      });
+      
+      if (!lead || lead.source !== 'Meta Ads') {
+        return; // Only process auto-captured Meta leads
+      }
+      
+      // 1. Find target campaign matching Form ID (if available)
+      let targetCampaign = null;
+      if (event.formId) {
+        targetCampaign = await this.prisma.campaign.findFirst({
+          where: {
+            status: 'ACTIVE',
+            facebookFormId: event.formId
+          }
+        });
+      }
+      
+      // 2. Fallback to latest active campaign
+      if (!targetCampaign) {
+        targetCampaign = await this.prisma.campaign.findFirst({
+          where: {
+            status: 'ACTIVE',
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        });
+      }
+      
+      if (targetCampaign) {
+        // Link lead to campaign
+        await this.prisma.campaignLead.create({
+          data: {
+            campaignId: targetCampaign.id,
+            leadId: lead.id,
+            sentAt: new Date(),
+          },
+        });
+        this.logger.log(`Auto-enrolled Meta lead ${lead.name} into campaign ${targetCampaign.title}`);
+        
+        // Find notification target user (owner, campaign creator, or first broker)
+        let notificationUserId = event.ownerId || targetCampaign.createdById;
+        if (!notificationUserId) {
+          const broker = await this.prisma.user.findFirst({ where: { role: 'BROKER' } });
+          notificationUserId = broker?.id || '';
+        }
+        
+        if (notificationUserId) {
+          await this.notificationsService.create({
+            title: 'Lead Campaign Auto-Enroll',
+            message: `Lead "${lead.name}" auto-enrolled in campaign "${targetCampaign.title}" based on Form ID.`,
+            type: 'SUCCESS',
+            userId: notificationUserId,
+            link: `/marketing`
+          });
+        }
+      } else {
+        this.logger.log(`No active marketing campaigns found to enroll lead ${lead.name}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to auto-enroll lead: ${error.message}`, error.stack);
     }
   }
 
