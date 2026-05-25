@@ -16,6 +16,7 @@ import Agents from './modules/agents/AgentsPage';
 import Profile from './pages/Profile';
 import Marketing from './modules/marketing/MarketingPage';
 import IntegrationsPage from './pages/IntegrationsPage';
+import PublicFormPage from './pages/PublicFormPage';
 import Layout from './components/Layout';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/login/agent" element={<Navigate to="/agent" replace />} />
         <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/public/lead-form" element={<PublicFormPage />} />
         
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />

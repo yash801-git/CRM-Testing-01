@@ -126,7 +126,6 @@ model Campaign {
   spent         Decimal?       @db.Decimal(15, 2) @default(0)
   startDate     DateTime?
   endDate       DateTime?
-  facebookFormId String?       // Maps this campaign to a specific Facebook Lead Form ID
   propertyId    String?
   property      Property?      @relation(fields: [propertyId], references: [id])
   createdById   String?

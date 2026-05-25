@@ -154,4 +154,12 @@ export class LeadsService {
     });
     return this.prisma.lead.delete({ where: { id } });
   }
+
+  /** Public helper: allows controllers to fire the LEAD_CREATED event */
+  emitLeadCreatedEvent(lead: any) {
+    this.eventEmitter.emit(
+      CRM_EVENTS.LEAD_CREATED,
+      new LeadCreatedEvent(lead.id, lead.ownerId || '', lead.name),
+    );
+  }
 }

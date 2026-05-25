@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Plus, Megaphone, TrendingUp, Users, CheckCircle2, Mail, MessageCircle, Phone, Share2, Trash2, Edit, ChevronDown, CircleDot } from 'lucide-react';
+import { Plus, Megaphone, TrendingUp, Users, CheckCircle2, Mail, MessageCircle, Phone, Share2, Trash2, Edit, ChevronDown, CircleDot, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -79,6 +79,15 @@ const MarketingPage: React.FC = () => {
     } catch (err) {
       toast.error("Failed to update status");
     }
+  };
+
+  const handleCopyLink = (campaignId: string) => {
+    const url = `${window.location.origin}/public/lead-form?campaignId=${campaignId}&source=CRM+Ad+Form`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Ad form link copied to clipboard! Share it in your ads.');
+    }).catch(() => {
+      toast.error('Could not copy to clipboard');
+    });
   };
 
   const filtered = useMemo(() => {
@@ -269,6 +278,15 @@ const MarketingPage: React.FC = () => {
                       )}
                     </DropdownMenu>
 
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopyLink(campaign.id)}
+                      className="h-9 w-9 rounded-xl hover:bg-violet-500/10 hover:text-violet-500"
+                      title="Copy public ad form link"
+                    >
+                      <Link className="h-4 w-4" />
+                    </Button>
                     {canManageCampaigns && (
                       <Button size="sm" variant="ghost" onClick={() => handleOpen(campaign)} className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary">
                         <Edit className="h-4 w-4" />
