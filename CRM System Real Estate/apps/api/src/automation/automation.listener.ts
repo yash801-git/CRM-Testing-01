@@ -65,40 +65,27 @@ export class AutomationListener {
   async handleNewLeadMarketingEnrollment(event: LeadCreatedEvent) {
     try {
       this.logger.log(`Checking automated marketing campaign enrollment for lead: ${event.leadId}`);
-      
+
       const lead = await this.prisma.lead.findUnique({
-        where: { id: event.leadId }
+        where: { id: event.leadId },
+        include: { campaignLeads: true },
       });
-      
-      if (!lead || lead.source !== 'Meta Ads') {
-        return; // Only process auto-captured Meta leads
+
+      if (!lead) return;
+
+      // Skip if lead is already linked to a campaign (e.g. via the public form URL with campaignId)
+      if (lead.campaignLeads && lead.campaignLeads.length > 0) {
+        this.logger.log(`Lead ${lead.name} is already enrolled in a campaign, skipping auto-enroll.`);
+        return;
       }
-      
-      // 1. Find target campaign matching Form ID (if available)
-      let targetCampaign = null;
-      if (event.formId) {
-        targetCampaign = await this.prisma.campaign.findFirst({
-          where: {
-            status: 'ACTIVE',
-            facebookFormId: event.formId
-          }
-        });
-      }
-      
-      // 2. Fallback to latest active campaign
-      if (!targetCampaign) {
-        targetCampaign = await this.prisma.campaign.findFirst({
-          where: {
-            status: 'ACTIVE',
-          },
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-      }
-      
+
+      // Fallback: find the latest active campaign and enroll the lead
+      const targetCampaign = await this.prisma.campaign.findFirst({
+        where: { status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+      });
+
       if (targetCampaign) {
-        // Link lead to campaign
         await this.prisma.campaignLead.create({
           data: {
             campaignId: targetCampaign.id,
@@ -106,22 +93,22 @@ export class AutomationListener {
             sentAt: new Date(),
           },
         });
-        this.logger.log(`Auto-enrolled Meta lead ${lead.name} into campaign ${targetCampaign.title}`);
-        
-        // Find notification target user (owner, campaign creator, or first broker)
+        this.logger.log(`Auto-enrolled lead ${lead.name} into campaign ${targetCampaign.title}`);
+
+        // Notify the campaign creator or first broker
         let notificationUserId = event.ownerId || targetCampaign.createdById;
         if (!notificationUserId) {
           const broker = await this.prisma.user.findFirst({ where: { role: 'BROKER' } });
           notificationUserId = broker?.id || '';
         }
-        
+
         if (notificationUserId) {
           await this.notificationsService.create({
-            title: 'Lead Campaign Auto-Enroll',
-            message: `Lead "${lead.name}" auto-enrolled in campaign "${targetCampaign.title}" based on Form ID.`,
+            title: 'New Lead Auto-Enrolled',
+            message: `Lead "${lead.name}" was automatically enrolled in campaign "${targetCampaign.title}".`,
             type: 'SUCCESS',
             userId: notificationUserId,
-            link: `/marketing`
+            link: '/marketing',
           });
         }
       } else {
