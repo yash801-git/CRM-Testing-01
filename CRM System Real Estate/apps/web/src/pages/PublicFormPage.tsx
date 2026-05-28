@@ -55,9 +55,17 @@ export default function PublicFormPage() {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+        if (name === 'propertyType' && !['Apartment', 'Villa', 'House', ''].includes(value)) {
+          newData.bhk = '';
+        }
+        return newData;
+      });
     }
   };
+
+  const isResidential = ['Apartment', 'Villa', 'House', ''].includes(formData.propertyType);
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,16 +224,18 @@ export default function PublicFormPage() {
                   </select>
                 </div>
 
-                <div className={`pfp-field ${focusedField === 'bhk' ? 'pfp-field-focused' : ''}`}>
-                  <label htmlFor="pfp-bhk" className="pfp-label"><span className="pfp-label-icon">🛏️</span> Size Requirement</label>
-                  <select id="pfp-bhk" name="bhk" value={formData.bhk} onChange={handleInputChange} className="pfp-input" onFocus={() => setFocusedField('bhk')} onBlur={() => setFocusedField(null)}>
-                    <option value="" disabled>Select BHK</option>
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4+ BHK">4+ BHK</option>
-                  </select>
-                </div>
+                {isResidential && (
+                  <div className={`pfp-field ${focusedField === 'bhk' ? 'pfp-field-focused' : ''}`}>
+                    <label htmlFor="pfp-bhk" className="pfp-label"><span className="pfp-label-icon">🛏️</span> Size Requirement</label>
+                    <select id="pfp-bhk" name="bhk" value={formData.bhk} onChange={handleInputChange} className="pfp-input" onFocus={() => setFocusedField('bhk')} onBlur={() => setFocusedField(null)}>
+                      <option value="" disabled>Select BHK</option>
+                      <option value="1 BHK">1 BHK</option>
+                      <option value="2 BHK">2 BHK</option>
+                      <option value="3 BHK">3 BHK</option>
+                      <option value="4+ BHK">4+ BHK</option>
+                    </select>
+                  </div>
+                )}
 
                 <div className="pfp-field">
                   <label className="pfp-label"><span className="pfp-label-icon">🎯</span> Purpose of Buying</label>
