@@ -81,8 +81,11 @@ const MarketingPage: React.FC = () => {
     }
   };
 
-  const handleCopyLink = (campaignId: string) => {
-    const url = `${window.location.origin}/public/lead-form?campaignId=${campaignId}&source=CRM+Ad+Form`;
+  const handleCopyLink = (campaign: any) => {
+    let url = `${window.location.origin}/public/lead-form?campaignId=${campaign.id}&source=CRM+Ad+Form`;
+    if (campaign.propertyId) {
+      url += `&propertyId=${campaign.propertyId}`;
+    }
     navigator.clipboard.writeText(url).then(() => {
       toast.success('Ad form link copied to clipboard! Share it in your ads.');
     }).catch(() => {
@@ -281,7 +284,7 @@ const MarketingPage: React.FC = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleCopyLink(campaign.id)}
+                      onClick={() => handleCopyLink(campaign)}
                       className="h-9 w-9 rounded-xl hover:bg-violet-500/10 hover:text-violet-500"
                       title="Copy public ad form link"
                     >

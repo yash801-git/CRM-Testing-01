@@ -1,8 +1,11 @@
 import {
   Controller,
   Post,
+  Get,
+  Param,
   Body,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -59,6 +62,11 @@ export class PublicLeadsController {
         status: 'NEW',
         budget: data.budget ? parseFloat(data.budget) : null,
         notes: data.notes ? String(data.notes).trim() : null,
+        propertyType: data.propertyType || null,
+        bhk: data.bhk || null,
+        purpose: data.purpose || null,
+        timeline: data.timeline || null,
+        requiresLoan: data.requiresLoan === true || data.requiresLoan === 'true',
       },
     });
 
@@ -82,5 +90,23 @@ export class PublicLeadsController {
     this.leadsService.emitLeadCreatedEvent(lead);
 
     return { success: true, leadId: lead.id };
+  }
+
+  /**
+   * GET /api/public/properties/:id
+   * Fetch basic, safe public details for a property to display on the form header.
+   */
+  @Get('properties/:id')
+  async getPublicProperty(@Param('id') id: string) {
+    const property = await this.prisma.property.findUnique({
+      where: { id },
+      select: { title: true, price: true, city: true, state: true, images: true },
+    });
+    
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+    
+    return property;
   }
 }

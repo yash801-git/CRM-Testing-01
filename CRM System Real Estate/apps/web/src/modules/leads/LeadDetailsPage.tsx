@@ -157,15 +157,46 @@ const LeadDetailsPage: React.FC = () => {
             <Card className="border-none shadow-xl bg-card/50 backdrop-blur-md rounded-[2.5rem] flex flex-col h-full">
               <CardContent className="p-8">
                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Budget & Requirements</h4>
-                 <div className="bg-primary/5 p-8 rounded-[2rem] border border-primary/10 flex flex-col justify-center">
+                 
+                 <div className="bg-primary/5 p-6 rounded-[2rem] border border-primary/10 flex flex-col justify-center mb-6">
                     <span className="text-xs font-black uppercase text-primary tracking-widest">Estimated Budget</span>
                     <p className="text-2xl xl:text-3xl 2xl:text-4xl font-black tracking-tighter text-primary mt-2 whitespace-nowrap">
-                      ₹{lead.budget ? Number(lead.budget).toLocaleString() : '0'}
+                      ₹{lead.budget ? Number(lead.budget).toLocaleString() : 'Not Specified'}
                     </p>
                  </div>
-                 <div className="mt-8 space-y-3">
+
+                 <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-secondary/40 p-4 rounded-2xl">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property Type</span>
+                      <p className="text-sm font-bold mt-1">{lead.propertyType || 'Any'}</p>
+                    </div>
+                    <div className="bg-secondary/40 p-4 rounded-2xl">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Size / BHK</span>
+                      <p className="text-sm font-bold mt-1">{lead.bhk || 'Any'}</p>
+                    </div>
+                    <div className="bg-secondary/40 p-4 rounded-2xl">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Purpose</span>
+                      <p className="text-sm font-bold mt-1">{lead.purpose || 'Not Specified'}</p>
+                    </div>
+                    <div className="bg-secondary/40 p-4 rounded-2xl">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Timeline</span>
+                      <p className="text-sm font-bold mt-1">{lead.timeline || 'Not Specified'}</p>
+                    </div>
+                 </div>
+
+                 {lead.requiresLoan && (
+                   <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl mb-6 flex items-start gap-3">
+                     <span className="text-xl">🏦</span>
+                     <div>
+                       <p className="text-xs font-black text-emerald-500 uppercase tracking-widest">Home Loan Assistance Requested</p>
+                       <p className="text-[11px] text-emerald-600/70 font-medium mt-1">This lead has requested help with financing. Pitch partner banks.</p>
+                     </div>
+                   </div>
+                 )}
+
+                 <div className="space-y-3">
                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Additional Notes</span>
-                   <p className="text-base font-medium text-muted-foreground bg-secondary/30 p-6 rounded-[2rem] italic">
+                   <p className="text-sm font-medium text-muted-foreground bg-secondary/30 p-5 rounded-[1.5rem] italic">
                      {lead.notes || 'No extra requirements specified yet.'}
                    </p>
                  </div>

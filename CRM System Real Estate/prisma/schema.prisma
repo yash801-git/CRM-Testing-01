@@ -184,6 +184,11 @@ model Lead {
   status        LeadStatus  @default(NEW)
   budget        Decimal?    @db.Decimal(15, 2)
   notes         String?
+  propertyType  String?
+  bhk           String?
+  purpose       String?
+  timeline      String?
+  requiresLoan  Boolean?    @default(false)
   ownerId       String?
   owner         User?       @relation("LeadOwner", fields: [ownerId], references: [id])
   createdAt     DateTime    @default(now())
