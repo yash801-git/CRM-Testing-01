@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Plus, Megaphone, TrendingUp, Users, CheckCircle2, Mail, MessageCircle, Phone, Share2, Trash2, Edit, ChevronDown, CircleDot, Link } from 'lucide-react';
+import { CampaignAnalyticsCard } from './components/CampaignAnalyticsCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -228,20 +229,12 @@ const MarketingPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Budget Bar */}
-                  {campaign.budget && (
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Budget</span>
-                        <span className="text-[10px] font-black">₹{Number(campaign.spent || 0).toLocaleString()} / ₹{Number(campaign.budget).toLocaleString()}</span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-1.5">
-                        <div
-                          className="bg-primary h-1.5 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(budgetUsed, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                  {/* Analytics & Budget Bar */}
+                  {(campaign.budget || campaign.spent) && (
+                    <CampaignAnalyticsCard 
+                      campaign={campaign} 
+                      totalLeads={leadCount} 
+                    />
                   )}
 
                   {/* Date Range */}

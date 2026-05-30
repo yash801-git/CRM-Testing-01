@@ -43,7 +43,16 @@ export default function PublicFormPage() {
       fetch(`${API_BASE}/public/properties/${propertyId}`)
         .then(res => res.json())
         .then(data => {
-          if (!data.error) setPropertyDetails(data);
+          if (!data.error) {
+            setPropertyDetails(data);
+            if (data.type) {
+              // Map DB Enum (e.g. 'VILLA', 'HOUSE') to form expected value ('Villa', 'House')
+              const mappedType = data.type === 'HOUSE' ? 'House' : 
+                                 data.type === 'PLOT' ? 'Plot' : 
+                                 data.type.charAt(0).toUpperCase() + data.type.slice(1).toLowerCase();
+              setFormData(prev => ({ ...prev, propertyType: mappedType }));
+            }
+          }
         })
         .catch(err => console.error("Failed to load property details", err));
     }
@@ -213,8 +222,20 @@ export default function PublicFormPage() {
                 <h3 className="pfp-step-title">Step 1: Your Requirements</h3>
                 
                 <div className={`pfp-field ${focusedField === 'propertyType' ? 'pfp-field-focused' : ''}`}>
-                  <label htmlFor="pfp-propertyType" className="pfp-label"><span className="pfp-label-icon">🏢</span> Property Type</label>
-                  <select id="pfp-propertyType" name="propertyType" value={formData.propertyType} onChange={handleInputChange} className="pfp-input" onFocus={() => setFocusedField('propertyType')} onBlur={() => setFocusedField(null)}>
+                  <label htmlFor="pfp-propertyType" className="pfp-label">
+                    <span className="pfp-label-icon">🏢</span> Property Type
+                    {propertyDetails?.type && <span style={{ fontSize: '9px', marginLeft: 'auto', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>LOCKED</span>}
+                  </label>
+                  <select 
+                    id="pfp-propertyType" 
+                    name="propertyType" 
+                    value={formData.propertyType} 
+                    onChange={handleInputChange} 
+                    disabled={!!propertyDetails?.type}
+                    className={`pfp-input ${!!propertyDetails?.type ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                    onFocus={() => setFocusedField('propertyType')} 
+                    onBlur={() => setFocusedField(null)}
+                  >
                     <option value="" disabled>Select property type</option>
                     <option value="Apartment">Apartment</option>
                     <option value="Villa">Villa</option>

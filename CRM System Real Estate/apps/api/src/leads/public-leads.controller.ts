@@ -100,7 +100,7 @@ export class PublicLeadsController {
   async getPublicProperty(@Param('id') id: string) {
     const property = await this.prisma.property.findUnique({
       where: { id },
-      select: { title: true, price: true, city: true, state: true, images: true },
+      select: { title: true, price: true, city: true, state: true, images: true, type: true },
     });
     
     if (!property) {
