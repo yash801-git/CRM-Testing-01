@@ -82,13 +82,14 @@ const MarketingPage: React.FC = () => {
     }
   };
 
-  const handleCopyLink = (campaign: any) => {
-    let url = `${window.location.origin}/public/lead-form?campaignId=${campaign.id}&source=CRM+Ad+Form`;
+  const handleCopyLink = (campaign: any, source: string = 'CRM Ad Form') => {
+    const encodedSource = encodeURIComponent(source);
+    let url = `${window.location.origin}/public/lead-form?campaignId=${campaign.id}&source=${encodedSource}`;
     if (campaign.propertyId) {
       url += `&propertyId=${campaign.propertyId}`;
     }
     navigator.clipboard.writeText(url).then(() => {
-      toast.success('Ad form link copied to clipboard! Share it in your ads.');
+      toast.success(`Ad link for ${source} copied!`);
     }).catch(() => {
       toast.error('Could not copy to clipboard');
     });
@@ -274,15 +275,32 @@ const MarketingPage: React.FC = () => {
                       )}
                     </DropdownMenu>
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleCopyLink(campaign)}
-                      className="h-9 w-9 rounded-xl hover:bg-violet-500/10 hover:text-violet-500"
-                      title="Copy public ad form link"
-                    >
-                      <Link className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-9 w-9 rounded-xl hover:bg-violet-500/10 hover:text-violet-500"
+                          title="Copy public ad form link"
+                        >
+                          <Link className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl bg-card/95 backdrop-blur-xl p-2 min-w-[160px]">
+                        <div className="px-2 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">
+                          Copy Link For:
+                        </div>
+                        {['Facebook', 'Instagram', 'WhatsApp', 'Website', 'Generic Ad'].map((src) => (
+                          <DropdownMenuItem
+                            key={src}
+                            onClick={() => handleCopyLink(campaign, src)}
+                            className="rounded-xl px-3 py-2 text-xs font-bold cursor-pointer mb-1 last:mb-0 hover:bg-secondary focus:bg-primary focus:text-primary-foreground"
+                          >
+                            {src}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     {canManageCampaigns && (
                       <Button size="sm" variant="ghost" onClick={() => handleOpen(campaign)} className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary">
                         <Edit className="h-4 w-4" />
