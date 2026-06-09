@@ -109,4 +109,35 @@ export class PublicLeadsController {
     
     return property;
   }
+
+  /**
+   * POST /api/public/campaigns/:id/click
+   * Record a click/view for a campaign, grouped by source.
+   */
+  @Post('campaigns/:id/click')
+  async trackCampaignClick(
+    @Param('id') id: string,
+    @Body('source') source: string,
+  ) {
+    if (!source) source = 'CRM Ad Form';
+
+    const campaign = await this.prisma.campaign.findUnique({
+      where: { id },
+      select: { clicksBySource: true },
+    });
+
+    if (!campaign) {
+      throw new NotFoundException('Campaign not found');
+    }
+
+    const clicksObj = (campaign.clicksBySource as any) || {};
+    clicksObj[source] = (clicksObj[source] || 0) + 1;
+
+    await this.prisma.campaign.update({
+      where: { id },
+      data: { clicksBySource: clicksObj },
+    });
+
+    return { success: true };
+  }
 }

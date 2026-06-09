@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface Campaign {
   id: string;
   budget?: number | string | null;
   spent?: number | string | null;
   targetSegmentValue?: number | string | null;
+  clicksBySource?: Record<string, number> | null;
+  leads?: any[];
   [key: string]: any;
 }
 
@@ -29,6 +31,37 @@ export function CampaignAnalyticsCard({ campaign, totalLeads }: CampaignAnalytic
   // C. Potential Pipeline Value
   const pipelineValue = totalLeads * targetSegmentValue;
 
+  // D. Source Analytics Breakdown
+  const sourceAnalytics = useMemo(() => {
+    const clicksBySource = (campaign.clicksBySource as Record<string, number>) || {};
+    const leadsBySource: Record<string, number> = {};
+
+    if (campaign.leads && Array.isArray(campaign.leads)) {
+      campaign.leads.forEach((cl: any) => {
+        const source = cl.lead?.source || 'CRM Ad Form';
+        leadsBySource[source] = (leadsBySource[source] || 0) + 1;
+      });
+    }
+
+    const allSources = Array.from(new Set([...Object.keys(clicksBySource), ...Object.keys(leadsBySource)]));
+
+    return allSources.map(source => {
+      const clicks = clicksBySource[source] || 0;
+      const leads = leadsBySource[source] || 0;
+      const conversionRate = clicks > 0 ? (leads / clicks) * 100 : 0;
+      // Clamp bounce rate to 0 to avoid negative values if leads > clicks
+      const bounceRate = clicks > 0 ? Math.max(((clicks - leads) / clicks) * 100, 0) : 0;
+
+      return {
+        source,
+        clicks,
+        leads,
+        conversionRate,
+        bounceRate
+      };
+    }).sort((a, b) => b.clicks - a.clicks); // Sort by highest clicks
+  }, [campaign.clicksBySource, campaign.leads]);
+
   return (
     <div className="mt-4 pt-4 border-t border-primary/10">
       <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Analytics & ROI</h4>
@@ -47,7 +80,7 @@ export function CampaignAnalyticsCard({ campaign, totalLeads }: CampaignAnalytic
       </div>
 
       {/* Budget Burn Rate */}
-      <div>
+      <div className="mb-4">
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Burn Rate ({Math.round(burnRate)}%)</span>
           <span className="text-[10px] font-black">₹{spent.toLocaleString()} / ₹{budget.toLocaleString()}</span>
@@ -59,6 +92,33 @@ export function CampaignAnalyticsCard({ campaign, totalLeads }: CampaignAnalytic
           />
         </div>
       </div>
+
+      {/* Source Breakdown */}
+      {sourceAnalytics.length > 0 && (
+        <div className="bg-secondary/20 rounded-2xl p-3 border border-border/40">
+          <h5 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-2">Performance by Source</h5>
+          <div className="space-y-2">
+            {sourceAnalytics.map((stat, i) => (
+              <div key={i} className="flex flex-col gap-1 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold">{stat.source}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">
+                    {stat.clicks} Clicks → {stat.leads} Leads
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-secondary/50 rounded-lg p-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500">
+                    {Math.round(stat.conversionRate)}% Conversion
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-amber-500">
+                    {Math.round(stat.bounceRate)}% Bounce
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

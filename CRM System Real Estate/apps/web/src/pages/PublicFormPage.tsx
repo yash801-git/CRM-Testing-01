@@ -39,6 +39,19 @@ export default function PublicFormPage() {
   useEffect(() => {
     setTimeout(() => setAnimateIn(true), 50);
 
+    // Track click/view natively if campaignId exists
+    if (campaignId) {
+      const sessionKey = `tracked_view_${campaignId}_${source}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        fetch(`${API_BASE}/public/campaigns/${campaignId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source })
+        }).catch(err => console.error("Tracking failed", err));
+        sessionStorage.setItem(sessionKey, 'true');
+      }
+    }
+
     if (propertyId) {
       fetch(`${API_BASE}/public/properties/${propertyId}`)
         .then(res => res.json())

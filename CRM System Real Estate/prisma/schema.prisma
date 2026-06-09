@@ -125,6 +125,7 @@ model Campaign {
   budget        Decimal?       @db.Decimal(15, 2)
   spent         Decimal?       @db.Decimal(15, 2) @default(0)
   targetSegmentValue Decimal?  @db.Decimal(15, 2)
+  clicksBySource Json?         @default("{}")
   startDate     DateTime?
   endDate       DateTime?
   propertyId    String?

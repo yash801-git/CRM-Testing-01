@@ -12,7 +12,7 @@ export class MarketingService {
         createdBy: { select: { name: true } },
         leads: {
           include: {
-            lead: { select: { name: true, phone: true, email: true } },
+            lead: { select: { name: true, phone: true, email: true, source: true } },
           },
         },
         _count: { select: { leads: true } },
@@ -29,7 +29,7 @@ export class MarketingService {
         createdBy: { select: { name: true } },
         leads: {
           include: {
-            lead: { select: { id: true, name: true, phone: true, email: true, status: true } },
+            lead: { select: { id: true, name: true, phone: true, email: true, status: true, source: true } },
           },
         },
       },
