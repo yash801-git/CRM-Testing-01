@@ -4,10 +4,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
+import { MetaSyncService } from './meta-sync.service';
+
 @Controller('marketing')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MarketingController {
-  constructor(private readonly marketingService: MarketingService) {}
+  constructor(
+    private readonly marketingService: MarketingService,
+    private readonly metaSyncService: MetaSyncService,
+  ) {}
 
   @Get('stats')
   getStats() {
@@ -48,5 +53,11 @@ export class MarketingController {
     @Param('leadId') leadId: string,
   ) {
     return this.marketingService.markLeadResponded(campaignId, leadId);
+  }
+
+  @Post('test-sandbox-sync')
+  @Roles('BROKER', 'ADMIN')
+  triggerSandboxSync() {
+    return this.metaSyncService.triggerTestSimulation();
   }
 }
