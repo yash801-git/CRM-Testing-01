@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { fireViewContentEvent, fireInitiateCheckoutEvent, fireLeadEvent } from '../utils/pixel';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -52,6 +53,13 @@ export default function PublicFormPage() {
       }
     }
 
+    // Fire Meta Pixel ViewContent event
+    fireViewContentEvent({
+      source,
+      campaignId,
+      propertyTitle: propertyDetails?.title,
+    });
+
     if (propertyId) {
       fetch(`${API_BASE}/public/properties/${propertyId}`)
         .then(res => res.json())
@@ -91,6 +99,8 @@ export default function PublicFormPage() {
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
+    // Fire Meta Pixel InitiateCheckout when user moves to Step 2
+    fireInitiateCheckoutEvent();
     setStep(2);
   };
 
@@ -129,6 +139,13 @@ export default function PublicFormPage() {
       }
 
       setFormState('success');
+      // Fire Meta Pixel Lead event on successful submission
+      fireLeadEvent({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        source,
+      });
     } catch (err: any) {
       setErrorMsg(err.message || 'Something went wrong. Please try again.');
       setFormState('error');

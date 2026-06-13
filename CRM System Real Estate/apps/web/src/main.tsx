@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { ThemeProvider } from './components/theme-provider'
+import { initPixel } from './utils/pixel'
+
+// Initialize Meta Pixel as early as possible
+initPixel();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
