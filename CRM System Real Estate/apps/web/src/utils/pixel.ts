@@ -4,14 +4,15 @@
  * The Pixel ID is loaded from environment variables.
  */
 
-declare global {
-  interface Window {
-    fbq: (...args: any[]) => void;
-    _fbq: any;
+const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID;
+
+// Use a safe accessor to avoid TypeScript conflicts with the global window type
+function fbq(...args: any[]) {
+  const w = window as any;
+  if (typeof w.fbq === 'function') {
+    w.fbq(...args);
   }
 }
-
-const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID;
 
 /**
  * Initialize the Meta Pixel.
@@ -23,12 +24,14 @@ export function initPixel() {
     return;
   }
 
-  if (typeof window.fbq === 'function') return; // Already initialized
+  const w = window as any;
+  if (typeof w.fbq === 'function') return; // Already initialized
 
-  // Standard Meta Pixel base code
-  (function(f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
+  // Standard Meta Pixel base code injected dynamically
+  (function (f: any, b: Document, e: string, v: string) {
+    let n: any;
     if (f.fbq) return;
-    n = f.fbq = function() {
+    n = f.fbq = function () {
       n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
     };
     if (!f._fbq) f._fbq = n;
@@ -36,15 +39,15 @@ export function initPixel() {
     n.loaded = true;
     n.version = '2.0';
     n.queue = [];
-    t = b.createElement(e);
+    const t = b.createElement(e) as HTMLScriptElement;
     t.async = true;
     t.src = v;
-    s = b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t, s);
+    const s = b.getElementsByTagName(e)[0];
+    s.parentNode?.insertBefore(t, s);
   })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
-  window.fbq('init', PIXEL_ID);
-  window.fbq('track', 'PageView');
+  fbq('init', PIXEL_ID);
+  fbq('track', 'PageView');
 }
 
 /**
@@ -56,8 +59,7 @@ export function fireViewContentEvent(data: {
   source?: string;
   campaignId?: string;
 }) {
-  if (typeof window.fbq !== 'function') return;
-  window.fbq('track', 'ViewContent', {
+  fbq('track', 'ViewContent', {
     content_name: data.propertyTitle || 'Real Estate Lead Form',
     content_category: 'Real Estate',
     content_ids: [data.campaignId || ''],
@@ -70,8 +72,7 @@ export function fireViewContentEvent(data: {
  * Tells Facebook: "This person was engaged enough to enter their details."
  */
 export function fireInitiateCheckoutEvent() {
-  if (typeof window.fbq !== 'function') return;
-  window.fbq('track', 'InitiateCheckout');
+  fbq('track', 'InitiateCheckout');
 }
 
 /**
@@ -84,11 +85,9 @@ export function fireLeadEvent(data: {
   phone?: string;
   source?: string;
 }) {
-  if (typeof window.fbq !== 'function') return;
-  window.fbq('track', 'Lead', {
+  fbq('track', 'Lead', {
     content_name: 'Real Estate Lead',
     content_category: 'Real Estate',
-    // Standard fields Facebook uses for audience matching
     fn: data.name?.toLowerCase() || '',
     em: data.email?.toLowerCase() || '',
     ph: data.phone || '',
