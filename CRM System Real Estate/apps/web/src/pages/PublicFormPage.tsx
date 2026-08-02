@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fireViewContentEvent, fireInitiateCheckoutEvent, fireLeadEvent } from '../utils/pixel';
+import { fireGoogleViewEvent, fireGoogleLeadEvent } from '../utils/google-tag';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -55,6 +56,13 @@ export default function PublicFormPage() {
 
     // Fire Meta Pixel ViewContent event
     fireViewContentEvent({
+      source,
+      campaignId,
+      propertyTitle: propertyDetails?.title,
+    });
+
+    // Fire Google Tag View event
+    fireGoogleViewEvent({
       source,
       campaignId,
       propertyTitle: propertyDetails?.title,
@@ -141,6 +149,14 @@ export default function PublicFormPage() {
       setFormState('success');
       // Fire Meta Pixel Lead event on successful submission
       fireLeadEvent({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        source,
+      });
+
+      // Fire Google Tag Lead event on successful submission
+      fireGoogleLeadEvent({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,

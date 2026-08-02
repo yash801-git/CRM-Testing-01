@@ -5,6 +5,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
 import { MetaSyncService } from './meta-sync.service';
+import { GoogleSyncService } from './google-sync.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('marketing')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -12,6 +14,7 @@ export class MarketingController {
   constructor(
     private readonly marketingService: MarketingService,
     private readonly metaSyncService: MetaSyncService,
+    private readonly googleSyncService: GoogleSyncService,
   ) {}
 
   @Get('stats')
@@ -55,9 +58,15 @@ export class MarketingController {
     return this.marketingService.markLeadResponded(campaignId, leadId);
   }
 
-  @Post('test-sandbox-sync')
-  @Roles('BROKER', 'ADMIN')
-  triggerSandboxSync() {
+  @Public()
+  @Get('test-sandbox-sync')
+  async triggerTestSync() {
     return this.metaSyncService.triggerTestSimulation();
+  }
+
+  @Public()
+  @Get('test-google-sandbox-sync')
+  async triggerGoogleTestSync() {
+    return this.googleSyncService.triggerTestSimulation();
   }
 }

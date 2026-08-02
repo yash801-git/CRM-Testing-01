@@ -20,6 +20,16 @@ const IntegrationsPage: React.FC = () => {
   
   const [isMetaActive, setIsMetaActive] = useState(false);
 
+  // Specific Google Config State
+  const [googleConfig, setGoogleConfig] = useState({
+    clientId: '',
+    clientSecret: '',
+    developerToken: '',
+    refreshToken: '',
+    customerId: '',
+  });
+  const [isGoogleActive, setIsGoogleActive] = useState(false);
+
   useEffect(() => {
     fetchIntegrations();
   }, []);
@@ -34,6 +44,14 @@ const IntegrationsPage: React.FC = () => {
         setIsMetaActive(metaIntegration.isActive);
         if (metaIntegration.config) {
           setMetaConfig(metaIntegration.config);
+        }
+      }
+
+      const googleIntegration = integrations.find((i: any) => i.provider === 'GOOGLE_ADS');
+      if (googleIntegration) {
+        setIsGoogleActive(googleIntegration.isActive);
+        if (googleIntegration.config) {
+          setGoogleConfig(googleIntegration.config);
         }
       }
     } catch (error) {
@@ -69,6 +87,36 @@ const IntegrationsPage: React.FC = () => {
       });
       setIsMetaActive(false);
       toast.success("Meta Integration Disconnected");
+    } catch (error) {
+      toast.error("Failed to disconnect");
+    }
+  };
+
+  const handleSaveGoogle = async () => {
+    setSaving(true);
+    try {
+      await api.post('/integrations/GOOGLE_ADS', {
+        isActive: true,
+        config: googleConfig,
+      });
+      setIsGoogleActive(true);
+      toast.success("Google Ads Integration Saved Successfully!");
+    } catch (error) {
+      console.error("Failed to save google integration", error);
+      toast.error("Error saving integration configuration");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    try {
+      await api.post('/integrations/GOOGLE_ADS', {
+        isActive: false,
+        config: googleConfig,
+      });
+      setIsGoogleActive(false);
+      toast.success("Google Ads Integration Disconnected");
     } catch (error) {
       toast.error("Failed to disconnect");
     }
@@ -139,6 +187,87 @@ const IntegrationsPage: React.FC = () => {
               </Button>
               {isMetaActive && (
                 <Button onClick={handleDisconnectMeta} variant="destructive" className="rounded-xl px-3">
+                  Disconnect
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Google Ads Card */}
+        <Card className={`border-none shadow-xl ${isGoogleActive ? 'bg-primary/5 ring-2 ring-primary/20' : 'bg-card/50'} backdrop-blur-md rounded-[2rem] overflow-hidden transition-all`}>
+          <CardHeader className="pb-4">
+            <div className="flex justify-between items-start">
+              <div className="h-12 w-12 rounded-2xl bg-red-500 flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+              </div>
+              {isGoogleActive ? (
+                <span className="flex items-center text-xs font-black text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full"><CheckCircle2 className="w-3 h-3 mr-1"/> Connected</span>
+              ) : (
+                <span className="flex items-center text-xs font-black text-muted-foreground bg-secondary px-3 py-1 rounded-full"><XCircle className="w-3 h-3 mr-1"/> Disconnected</span>
+              )}
+            </div>
+            <CardTitle className="mt-4 text-xl font-black">Google Ads</CardTitle>
+            <CardDescription className="text-xs font-medium">Automatically sync ad spend and track leads from Google Ads campaigns.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Client ID</Label>
+                <Input 
+                  value={googleConfig.clientId} 
+                  onChange={(e) => setGoogleConfig({...googleConfig, clientId: e.target.value})} 
+                  placeholder="e.g. 1234.apps.googleusercontent.com"
+                  className="h-10 bg-secondary/50 border-none rounded-xl font-medium text-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Client Secret</Label>
+                <Input 
+                  type="password"
+                  value={googleConfig.clientSecret} 
+                  onChange={(e) => setGoogleConfig({...googleConfig, clientSecret: e.target.value})} 
+                  placeholder="Secret Key"
+                  className="h-10 bg-secondary/50 border-none rounded-xl font-medium text-xs"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Developer Token</Label>
+              <Input 
+                type="password"
+                value={googleConfig.developerToken} 
+                onChange={(e) => setGoogleConfig({...googleConfig, developerToken: e.target.value})} 
+                placeholder="Google Ads Developer Token"
+                className="h-10 bg-secondary/50 border-none rounded-xl font-medium"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Refresh Token</Label>
+              <Input 
+                type="password"
+                value={googleConfig.refreshToken} 
+                onChange={(e) => setGoogleConfig({...googleConfig, refreshToken: e.target.value})} 
+                placeholder="OAuth2 Refresh Token"
+                className="h-10 bg-secondary/50 border-none rounded-xl font-medium"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Customer ID</Label>
+              <Input 
+                value={googleConfig.customerId} 
+                onChange={(e) => setGoogleConfig({...googleConfig, customerId: e.target.value})} 
+                placeholder="e.g. 1234567890 (No hyphens)"
+                className="h-10 bg-secondary/50 border-none rounded-xl font-medium"
+              />
+            </div>
+            
+            <div className="pt-4 flex gap-2">
+              <Button onClick={handleSaveGoogle} disabled={saving} className="flex-1 rounded-xl font-black shadow-lg shadow-primary/20">
+                {saving ? 'Saving...' : (isGoogleActive ? 'Update Config' : 'Connect')}
+              </Button>
+              {isGoogleActive && (
+                <Button onClick={handleDisconnectGoogle} variant="destructive" className="rounded-xl px-3">
                   Disconnect
                 </Button>
               )}
