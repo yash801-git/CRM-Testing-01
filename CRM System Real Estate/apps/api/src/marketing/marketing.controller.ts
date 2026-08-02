@@ -6,7 +6,6 @@ import { Roles } from '../auth/roles.decorator';
 
 import { MetaSyncService } from './meta-sync.service';
 import { GoogleSyncService } from './google-sync.service';
-import { Public } from '../auth/public.decorator';
 
 @Controller('marketing')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,14 +57,14 @@ export class MarketingController {
     return this.marketingService.markLeadResponded(campaignId, leadId);
   }
 
-  @Public()
   @Get('test-sandbox-sync')
+  @Roles('BROKER', 'ADMIN')
   async triggerTestSync() {
     return this.metaSyncService.triggerTestSimulation();
   }
 
-  @Public()
   @Get('test-google-sandbox-sync')
+  @Roles('BROKER', 'ADMIN')
   async triggerGoogleTestSync() {
     return this.googleSyncService.triggerTestSimulation();
   }

@@ -99,6 +99,7 @@ enum IntegrationProvider {
   META_LEADS
   WHATSAPP_CLOUD
   GOOGLE_CALENDAR
+  GOOGLE_ADS
 }
 
 model Integration {
