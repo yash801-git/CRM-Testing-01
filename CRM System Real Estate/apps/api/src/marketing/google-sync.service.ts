@@ -14,7 +14,7 @@ export class GoogleSyncService {
 
     try {
       // 1. Fetch active Google Ads configuration from the database
-      const integration = await this.prisma.integration.findUnique({
+      const integration = await this.prisma.integration.findFirst({
         where: { provider: 'GOOGLE_ADS' }
       });
 
