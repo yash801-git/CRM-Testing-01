@@ -26,6 +26,18 @@ export class MarketingController {
     return this.marketingService.findAll();
   }
 
+  @Get('test-sandbox-sync')
+  @Roles('BROKER', 'ADMIN')
+  async triggerTestSync() {
+    return this.metaSyncService.triggerTestSimulation();
+  }
+
+  @Get('test-g-sandbox')
+  @Roles('BROKER', 'ADMIN')
+  async triggerGoogleTestSync() {
+    return this.googleSyncService.triggerTestSimulation();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.marketingService.findOne(id);
@@ -57,15 +69,5 @@ export class MarketingController {
     return this.marketingService.markLeadResponded(campaignId, leadId);
   }
 
-  @Get('test-sandbox-sync')
-  @Roles('BROKER', 'ADMIN')
-  async triggerTestSync() {
-    return this.metaSyncService.triggerTestSimulation();
-  }
 
-  @Get('test-g-sandbox')
-  @Roles('BROKER', 'ADMIN')
-  async triggerGoogleTestSync() {
-    return this.googleSyncService.triggerTestSimulation();
-  }
 }
