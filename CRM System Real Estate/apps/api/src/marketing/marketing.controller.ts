@@ -63,7 +63,7 @@ export class MarketingController {
     return this.metaSyncService.triggerTestSimulation();
   }
 
-  @Get('test-google-sandbox-sync')
+  @Get('test-g-sandbox')
   @Roles('BROKER', 'ADMIN')
   async triggerGoogleTestSync() {
     return this.googleSyncService.triggerTestSimulation();
