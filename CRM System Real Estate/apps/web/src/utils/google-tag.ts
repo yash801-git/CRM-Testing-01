@@ -22,7 +22,7 @@ function gtag(...args: any[]) {
  */
 export function initGoogleTag() {
   if (!GOOGLE_CONVERSION_ID || GOOGLE_CONVERSION_ID === 'YOUR_GOOGLE_ID_HERE') {
-    console.warn('[Google Tag] No Conversion ID configured. Set VITE_GOOGLE_CONVERSION_ID in .env to activate.');
+    // Silently ignore if no conversion ID is configured (e.g. for Dummy tests)
     return;
   }
 
